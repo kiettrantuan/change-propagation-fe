@@ -5,19 +5,41 @@
 # Backend
 
 * APIs
+    - REST API:
+        - BUILT-IN: FETCH / GET/POST
+        - AXIOS
+    - GRAPHQL:
+        - APOLLO CLIENT
+        - Urql
 * WebSockets
+    - BUILT-IN: new WebSocket
+    - Socket.io
 * Server-Sent Events (SSE)
+    - BUILT-IN: const eventSource = new EventSource('http://localhost:8000/stream'); 
 * Polling and Long-Polling
-* Push Notifications
+    - REACT-QUERY
 
+| Method                       | Real-time | Bi-directional | Complexity | Browser Support |
+|------------------------------|-----------|----------------|------------|-----------------|
+| HTTP Requests (RESTful APIs) | No        | No             | Low        | High            |
+| WebSockets                   | Yes       | Yes            | Medium     | High            |
+| Server-Sent Events (SSE)     | Yes       | No             | Medium     | Medium          |
+| Long Polling                 | No        | No             | High       | High            |
 ---
 
 # User interaction
 
-* .
+* Event listeners
+    - HTML/JS: document.getElementById('myInput').addEventListener('input', (event) => {
+  console.log(event.target.value);
+});
+    - REACT: onChange, onClick
+    - VUE: v-on:click="handler" / @click="handler".
+    
+---
+# STATE/ CACHE 
 
 ---
-
 # Daemon
 
 * Background processes handles tasks *such as maintaining a WebSocket connection*
