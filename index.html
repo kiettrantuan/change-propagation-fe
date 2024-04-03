@@ -94,6 +94,10 @@
 		height: 50%
 	}
 </style>
+<img src="Pasted image 20240404020939.png" alt="" style="object-fit: scale-down">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
 # **Change Propagation In Frontend Environment**
 </div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
@@ -583,17 +587,205 @@ __SCRIPT_END__
 </aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-### Use Cases:
-</div></script></section></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+### Use Cases:  <!-- .element: style="position: absolute; left: undefined%; top: undefined%; height: 100%; width: 50%" -->
+
+<div class="fragment has-light-background" style="background-color: #75CFB8; position: absolute; left: 0%; top: 20%; height: 100%; width: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center" data-fragment-index="1">
+
+#### HTTP Requests
+Fetching data from a server when the page loads or when a user performs an action. 
+</div> 
+
+<div class="fragment has-light-background" style="background-color: #BBDFC8; position: absolute; left: 50%; top: 20%; height: 100%; width: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center" data-fragment-index="2">
+
+#### WebSockets
+Real-time applications such as chat apps, live sports updates, or real-time stock market data. 
+</div>
+</div>
+
+<aside class="notes"><p>HTTP: For example, when a user logs in, the frontend might make a POST request to the backend to verify the user’s credentials.
+Websocket: For example, in a chat app, when a user sends a message, it can be instantly pushed to other users without them needing to refresh the page</p>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="fragment has-light-background" style="background-color: #F0E5D8; position: absolute; left: 0%; top: 0%; height: 100%; width: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center" data-fragment-index="1">
+
+#### Server-Sent Events (SSE)
+Applications where the server needs to push updates to the client, but the client doesn’t need to send data to the server. 
+</div>
+<div class="fragment has-light-background" style="display: flex; flex-direction: column; align-items: center; background-color: #FFC478; position: absolute; left: 50%; top: 0%; height: 100%; width: 50%; justify-content: center" data-fragment-index="2">
+
+#### Polling
+Applications where real-time updates are needed, but WebSockets or SSE are not supported. 
+</div>
+</div>
+
+<aside class="notes"><p>SSE: For example, a news website might use SSE to push breaking news updates to the client
+Polling: For example, a weather application might use long polling to regularly update the weather data</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 ## Web Worker
+<img src="Pasted image 20240403171749.png" alt="" style="width: 1080px; object-fit: fill" class="fragment" data-fragment-index="1">
+</div>
 
-- JavaScript feature
+<aside class="notes"><p>Web Worker là một phương tiện đơn giản giúp cho trang web có thể chạy JavaScipt ở background. Luồng này có thể chạy mà không can thiệp gì đến giao diện chính. Một khi đã được khởi tạo, Worker có thể giao tiếp với luồng chính thông qua việc gửi và nhận message.</p>
+<p>Vì vậy, khi áp dụng JavaScript Web Worker một cách chính xác và phù hợp, trang web của bạn sẽ hoạt động mượt mà hơn rất nhiều.</p>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-- Independent background script
+### Dedicated Workers
 
-- Can't direct access to the DOM _but indirect through message pipeline_ <- how it propagate change
+- The simplest of the Web Workers.
+<!-- .element: class="fragment" data-fragment-index="1" -->
+<br></br>
+- Each one of these workers have exactly one parent. 
+<!-- .element: class="fragment" data-fragment-index="2" -->
+<br></br>
+- It cannot share data directly with other scripts or workers.
+<!-- .element: class="fragment" data-fragment-index="3" -->
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+```javascript
+// Main script
+var worker = new Worker('worker.js');
+
+worker.addEventListener('message', function(e) {
+  console.log('Message from worker: ', e.data);
+});
+
+worker.postMessage([2, 3]); // Send data to the worker
+
+// worker.js
+self.addEventListener('message', function(e) {
+  console.log('Worker received: ', e.data);
+  var result = e.data[0] * e.data[1];
+  self.postMessage(result); // Send data back to the main script
+});
+```
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+#### Why use a Dedicated Worker ?
+- Gives access  to an additional thread <!-- .element: class="fragment" data-fragment-index="1" -->
+- Offlad CPU intensive work <!-- .element: class="fragment" data-fragment-index="2" -->
+- Note : worker dies when parent dies <!-- .element: class="fragment" data-fragment-index="3" -->
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Shared Workers
+
+- Can have multiple parents. 
+<!-- .element: class="fragment" data-fragment-index="1" -->
+<br></br>
+- Can share data or state between multiple scripts. 
+<!-- .element: class="fragment" data-fragment-index="2" -->
+<br></br>
+- All scripts must come from the same origin (same protocol, host, and port) to access the same shared worker.
+<!-- .element: class="fragment" data-fragment-index="3" -->
+</div>
+
+<aside class="notes"><p>So for example, you can&#39;t have the Google web page communicating with the Microsoft web page</p>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+```javascript
+// Main script
+var worker = new SharedWorker('worker.js');
+
+worker.port.addEventListener('message', function(e) {
+  console.log('Message from worker: ', e.data);
+});
+
+worker.port.start(); // Start the port
+worker.port.postMessage('Hello, worker!'); // Send data to the worker
+
+// worker.js
+self.addEventListener('connect', function(e) {
+  var port = e.ports[0];
+  port.addEventListener('message', function(e) {
+    console.log('Worker received: ', e.data);
+    port.postMessage('Hello, main script!'); // Send data back to the main script
+  });
+  port.start(); // Start the port
+});
+```
+</div>
+
+<aside class="notes"><p>Creating a shared worker is very similar to how to create a dedicated one, but instead of the straight-forward communication between the main thread and the worker thread, you&#39;ll have to communicate via a port object, i.e., an explicit port has to be opened so multiple scripts can use it to communicate with the shared worker. (Note that dedicated workers do this implicitly)</p>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+#### Why use a Shared Worker ?
+- You need to communicate across pages <!-- .element: class="fragment" data-fragment-index="1" -->
+- You want a cross-page singleton source of truth <!-- .element: class="fragment" data-fragment-index="2" -->
+- Note : worker dies when last parent dies <!-- .element: class="fragment" data-fragment-index="3" -->
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Service workers
+
+- The most complex of the Web Workers
+<!-- .element: class="fragment" data-fragment-index="1" -->
+<br></br>
+- Intercept / proxy requests made to server
+<!-- .element: class="fragment" data-fragment-index="2" -->
+<br></br>
+- Can have zero parents, run in background
+<!-- .element: class="fragment" data-fragment-index="3" -->
+</div>
+
+<aside class="notes"><ul>
+<li>intercept ajax/fetch request</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+```javascript
+// Register a service worker
+navigator.serviceWorker.register('service-worker.js');
+
+// service-worker.js
+self.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open('my-cache').then(function(cache) {
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/app.js',
+        '/style.css'
+      ]);
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request).then(function(response) {
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+</div>
+
+<aside class="notes"><p>The service worker looks for the matching request in the cache and returns the corresponding Response if it&#39;s cached. Otherwise it retrieves the response from the network (optionally, updating the cache for future calls). If there is neither a cache response nor a network response, the request will error</p>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+#### Why use a Service Worker ?
+- Cache network assets when offline <!-- .element: class="fragment" data-fragment-index="1" -->
+- Perform background syncs of updated content <!-- .element: class="fragment" data-fragment-index="2" -->
+- Push notifications <!-- .element: class="fragment" data-fragment-index="3" -->
+</div></script></section></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# Wrap up
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# 
+<img src="Pasted image 20240404021551.png" alt="" style="object-fit: scale-down">
 </div></script></section></div>
     </div>
 
