@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title></title>
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/blood.css" id="theme" />
+    <link rel="stylesheet" href="css/vs2015.css" />
+	<link rel="stylesheet" href="css/layout.css" />
+	<link rel="stylesheet" href="plugin/customcontrols/style.css">
+	<link rel="stylesheet" href="plugin/chalkboard/style.css">
+
+	<link rel="stylesheet" href="plugin/reveal-pointer/pointer.css" />
+
+
+    <script defer src="dist/fontawesome/all.min.js"></script>
+
+	<script type="text/javascript">
+		var forgetPop = true;
+		function onPopState(event) {
+			if(forgetPop){
+				forgetPop = false;
+			} else {
+				parent.postMessage(event.target.location.href, "app://obsidian.md");
+			}
+        }
+		window.onpopstate = onPopState;
+		window.onmessage = event => {
+			if(event.data == "reload"){
+				window.document.location.reload();
+			}
+			forgetPop = true;
+		}
+
+		function fitElements(){
+			const itemsToFit = document.getElementsByClassName('fitText');
+			for (const item in itemsToFit) {
+				if (Object.hasOwnProperty.call(itemsToFit, item)) {
+					var element = itemsToFit[item];
+					fitElement(element,1, 1000);
+					element.classList.remove('fitText');
+				}
+			}
+		}
+
+		function fitElement(element, start, end){
+
+			let size = (end + start) / 2;
+			element.style.fontSize = `${size}px`;
+
+			if(Math.abs(start - end) < 1){
+				while(element.scrollHeight > element.offsetHeight){
+					size--;
+					element.style.fontSize = `${size}px`;
+				}
+				return;
+			}
+
+			if(element.scrollHeight > element.offsetHeight){
+				fitElement(element, start, size);
+			} else {
+				fitElement(element, size, end);
+			}		
+		}
+
+
+		document.onreadystatechange = () => {
+			fitElements();
+			if (document.readyState === 'complete') {
+				if (window.location.href.indexOf("?export") != -1){
+					parent.postMessage(event.target.location.href, "app://obsidian.md");
+				}
+				if (window.location.href.indexOf("print-pdf") != -1){
+					let stateCheck = setInterval(() => {
+						clearInterval(stateCheck);
+						window.print();
+					}, 250);
+				}
+			}
+	};
+
+
+        </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<style>
+	.h-50 {
+		height: 50%
+	}
+</style>
+# **Change Propagation In Frontend Environment**
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# What
+
+  
+
+ Pull/Push change to other parts in FE Ecosystem <!-- .element: class="fragment" data-fragment-index="1" -->
+</div>
+
+<aside class="notes"><ol>
+<li><em>Hiện &quot;What&quot;</em>
+Change propagation (lan truyền thay đổi) là gì:</li>
+</ol>
+<ul>
+<li>Khi thay đổi 1 phần trong hệ thống sẽ dẫn đến sự thay đổi ở các phần khác có liên quan đến nó.</li>
+<li>Như các bánh răng liên kết với nhau khi ta xoay 1 bánh bất kì sẽ lan truyền động năng làm xoay các bánh còn lại.</li>
+</ul>
+<ol start="2">
+<li><em>Hiện &quot;Pull/Push..&quot; và hình</em></li>
+</ol>
+<ul>
+<li>Ở FE ta có sơ đồ lan truyền gồm các thành phần chính là User, Display, Webworker và Backend.</li>
+<li>Ngoài Webworker và Backend có thể tương tác trực tiếp thì các phần lan truyền thay đổi qua Display.
+NOTE (ko nói):</li>
+<li>Như khi chiên trứng -&gt; tăng lửa -&gt; chảo nóng -&gt; trứng chín -&gt; tắt lửa -&gt; chảo giảm nhiệt -&gt; trứng không bị khét.</li>
+</ul>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+# DATA FLOW
+<img src="Pasted image 20240403142749.png" alt="" style="object-fit: scale-down">
+
+ <!-- .element: class="fragment" data-fragment-index="1" -->
+</div>
+
+<aside class="notes"><ul>
+<li><strong>Backend</strong>: This is the server-side of the application where data processing and storage occur.</li>
+<li><strong>Browser</strong>: This represents the client-side of the application where user interactions take place. It contains two parts: “Display (HTML/JS FE Framework)” and “State/Cache”. The “Display” part is responsible for rendering the user interface, while the “State/Cache” part manages the application’s state and cached data.</li>
+<li><strong>Webworker</strong>: This is a separate thread in the browser that can perform tasks in parallel with the main browser thread. It helps to offload heavy computations from the main thread, keeping the user interface responsive.</li>
+<li><strong>User</strong>: This represents the end-user interacting with the application through the browser.</li>
+</ul>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## User interaction 
+- Click, touch
+- Typing
+- Scrolling
+- ...
+</div>
+
+<aside class="notes"><ol>
+<li>Đầu tiên em xin nói về Thay đổi đến từ Tương tác của User:</li>
+</ol>
+<ul>
+<li>User thông qua các thiết bị vật lý như chuột, bàn phím, màn hình... Push và Pull thay đổi từ Display.</li>
+</ul>
+<ol start="2">
+<li>Ví dụ:</li>
+</ol>
+<ul>
+<li>User nhập form login rồi submit thì Display gọi lên Backend, đợi nhận kết quả login rồi Display render kết quả lại cho User.</li>
+<li>Trong ví dụ này, thay đổi đến từ User đã lan truyền qua Display tới Backend và ngược lại.</li>
+</ul>
+</aside></script></section><section ><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Display
+- HTML: Structure & Content
+- CSS: Style
+- JS: Functionality
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<img src="Pasted image 20240403141814.png" alt="" style="object-fit: scale-down">
+</div>
+
+<aside class="notes"><ol>
+<li>Display giữ vai trò nhận thay đổi từ các phần còn lại, xử lý rồi push thay đổi đến các phần cần thiết trong sơ đồ.</li>
+<li>Display tạo thành từ 3 ngôn ngữ có chức năng khác nhau:</li>
+</ol>
+<ul>
+<li>HTML: Cấu trúc và nội dung -&gt; tĩnh -&gt; xương sống</li>
+<li>CSS: Giao diện -&gt; tĩnh -&gt; da, quần áo, vẻ ngoài</li>
+<li>JavaScript: Chức năng, tương tác -&gt; đông -&gt; bộ não, điều khiển mọi chức năng, hoạt động sống
+NOTE (ko nói):</li>
+<li>Khi user truy cập web trên browser thì HTML sẽ load thành DOM cung cấp các method cho phép JavaScript truy cập và thay đổi.</li>
+<li>Get từ server (qua HTTP req/res) hoặc cache;</li>
+<li>HTML có thể qua <form action method> <button submit> để giao tiếp server mà ko cần JS, server process -&gt; trả về HTML mới</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Propagate change:
+- User: DOM Event -> JS -> ... -> DOM
+- Webworker: DOM message Event -> JS -> ... -> DOM
+- Backend: Network method -> JS -> ... -> DOM
+</div>
+
+<aside class="notes"><ol start="3">
+<li>Vậy làm sao để Display nhận biết (pull) thay đổi:</li>
+</ol>
+<ul>
+<li>Phía User: Gán event, state vào các element mà user có thể tương tác như button, input,...</li>
+<li>Phía Webworker: Event onmessage và postmessage</li>
+<li>Phía Backend: api, websocket...</li>
+</ul>
+<ol start="4">
+<li>Các DOM Event hay response từ BE sẽ được JS xử lý, tính toán lan và lan truyền đi cuối cùng quay lại update DOM cho User nếu cần thiết.</li>
+<li>Ví dụ: User login thì JS lấy username và pass từ DOM gửi lên BE, đợi response login thành công thì JS update State của user thành đã login và thay đổi các Element tương ứng như đổi button login thành sign out, hiển thị username...</li>
+</ol>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Framework:
+- React: Virtual DOM
+- Vue: data-binding
+- HTMX
+</div>
+
+<aside class="notes"><p>React:
+React uses a virtual DOM to track changes. When state changes in a component, React creates a new virtual DOM and compares it with the old one1.
+This process is called “diffing”. React identifies the differences (or “diffs”) between the old and new virtual DOMs and updates only those parts in the real DOM1.
+React uses synthetic events, which are wrappers around the browser’s native events. You can stop event propagation on synthetic events because React handles propagation of these events internally2.
+However, stopping the propagation of one type of event (e.g., a change event) won’t affect the propagation of a different type of event (e.g., a click event)3.
+React’s one-way data flow means that state is passed down from parent components to child components through props1. This makes state changes predictable but can make complex state management more challenging1.
+Vue:
+Vue also uses a virtual DOM and a diffing algorithm, similar to React4.
+However, Vue extends this with a reactivity system. When you change a Vue instance’s data, the view automatically updates4.
+Vue uses an event system that allows components to communicate with each other. Events in Vue can be triggered by user actions, component methods, or other components4.
+Vue provides the .stop modifier for v-on to stop event propagation5.
+Vue supports two-way data binding (with the v-model directive), which can make handling user input more straightforward4.
+For complex state management, Vue relies on Vuex, a state management library6.
+HTMX:
+HTMX allows you to access modern browser features directly from HTML, rather than using JavaScript7.
+It extends and generalizes the core idea of HTML as a hypertext, opening up many more possibilities directly within the language7.
+Any element, not just anchors and forms, can issue an HTTP request7.
+Any event, not just clicks or form submissions, can trigger requests7.
+Any HTTP verb, not just GET and POST, can be used7.
+Any element, not just the entire window, can be the target for update by the request7.
+When a successful action occurs during a POST, the response includes an HX-Trigger response header that looks like this: HX-Trigger:newContact. This will trigger the table to issue a GET to /contacts/table and this will render the newly added contact row (in addition to the rest of the table)</p>
+</aside></script></section></section><section ><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Backend
+- HTTP Requests <!-- .element: class="fragment" data-fragment-index="1" -->
+- WebSockets <!-- .element: class="fragment" data-fragment-index="2" -->
+- Server-Sent Events (SSE) <!-- .element: class="fragment" data-fragment-index="3" -->
+- Polling and Long-Polling <!-- .element: class="fragment" data-fragment-index="4" -->
+</div>
+
+<aside class="notes"><ul>
+<li>HTTP Requests: This is the most common way to connect frontend to backend. The frontend makes HTTP requests to the backend, which responds with the requested data. This data can be in various formats, such as JSON or XML</li>
+<li>WebSockets: This is a protocol that provides full-duplex communication between the client (frontend) and the server (backend) over a single, long-lived connection. This allows the server to push updates to the client as soon as they happen, without the client needing to request the updates.</li>
+<li>Server-Sent Events (SSE): This is a standard that allows a server to push updates to a client whenever a new event occurs on the server. Unlike WebSockets, SSE is a one-way communication channel from server to client.</li>
+<li><strong>Polling</strong> simply means checking for new data over a fixed interval of time by making API calls at regular intervals to the server. It is used to get real-time updates in applications. There are many applications that need real-time data and polling is a life savior for those applications.</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+| Method                   | Real-time  | Bi-directional  | Complexity  | Browser Support  |
+| ------------------------ | ---------- | --------------- | ----------- | ---------------- |
+| HTTP Requests            | No         | No              | Low         | High             |
+| WebSockets               | Yes        | Yes             | Medium      | High             |
+| Server-Sent Events (SSE) | Yes        | No              | Medium      | Medium           |
+| Polling                  | No         | No              | High        | High             |
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+**HTTP Requests**:
+
+- Real-time: No. The client must send a request to receive a response.
+- Bi-directional: No. The server cannot send data to the client without a client request.
+- Complexity: Low. This is the standard way of sending data over the web.
+- Browser Support: High. All modern browsers support this.
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+RESTful APIs
+```js
+fetch('https://api.example.com/data')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+
+fetch('https://api.example.com/user',
+{
+    method: "POST",
+    body: JSON.stringify({ name:'Flint' })
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+```js
+import axios from 'axios';
+axios.get('https://api.example.com/data')
+    .then(response => response.json())
+    .catch(error => console.error('Error:', error));
+    
+axios.post('https://api.example.com/user', { name: 'Flint' })
+	.then(response => response.json())
+    .catch(error => console.error('Error:', error));
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+Graphql
+- Apollo client, Urql, v...v...
+
+```js
+  import { gql, useQuery } from "urql";
+  const TodosQuery = gql`
+    query {
+      todos {
+        id
+        title
+      }
+    }
+  `;
+  const UpdateTodo = `
+	mutation (`$id: ID!, $`title: String!) {
+		updateTodo (id: `$id, title: $`title) {
+			id
+			title
+		}
+	}
+	`;
+  const Todos = () => {
+    const [result, reexecuteQuery] = useQuery({
+      query: TodosQuery,
+    });
+    const [updateTodoResult, updateTodo] = useMutation(UpdateTodo);
+    const submit = newTitle => {
+	const variables = { id, title: newTitle || '' };
+	updateTodo(variables).then(result => {
+		if (result.error) {
+			console.error('Oh no!', result.error);
+		}});
+	};
+    const { data, fetching, error } = result;
+    if (fetching) return <p>Loading...</p>;
+    if (error) return <p>Oh no... {error.message}</p>;
+    return (
+      <ul>
+        {data.todos.map((todo) => (
+          <li key={todo.id}>{todo.title}</li>
+        ))}
+      </ul>
+    );
+  };
+```
+</div>
+
+<aside class="notes"><ul>
+<li>Just like REST, GraphQL allows the client (frontend) to request data from the server (backend). However, there are some key differences between GraphQL and REST:</li>
+<li>Single Endpoint: In GraphQL, there’s typically a single endpoint that accepts queries, as opposed to multiple endpoints in REST.</li>
+<li>Client-Specified Responses: The client specifies exactly what data it needs, which can reduce over-fetching and under-fetching issues common in REST.</li>
+<li>Real-Time Updates: GraphQL has built-in support for real-time updates with subscriptions(Websocket). But only receive changes from server (one-way)</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+**WebSockets**:
+<img src="Pasted image 20240403032325.png" alt="" style="object-fit: scale-down">
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+- Real-time: Yes. The server can send data to the client at any time.
+- Bi-directional: Yes. Both the client and server can send data at any time.
+- Complexity: Medium. Requires more setup than HTTP requests. Uses a custom ws protocol to transport messages, which works at a lower level than HTTP
+- Browser Support: High. All modern browsers support this.
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+Js:
+```js
+const socket = new WebSocket('ws://localhost:8080');
+socket.addEventListener('message', function (event) {
+    console.log('Message from server: ', event.data);
+});
+socket.send('Hello Server!');
+```
+
+Alternative: socket.io <!-- .element: class="fragment" data-fragment-index="1" -->
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <script src="/socket.io/socket.io.js">__SCRIPT_END__
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js">__SCRIPT_END__
+    <script>
+      $(function () {
+        const socket = io();
+        $('form').submit(function(e){
+          e.preventDefault(); // prevents page reloading
+          socket.emit('chat message', $('#m').val());
+          $('#m').val('');
+          return false;
+        });
+        socket.on('chat message', function(msg){
+          `$('#messages').append($`('<li>').text(msg));
+        });
+      });
+    __SCRIPT_END__
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" ></input><button>Send</button>
+    </form>
+  </body>
+</html>
+```
+<!-- .element: class="fragment" data-fragment-index="2" -->
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+**Server-Sent Events (SSE)**:
+<img src="Pasted image 20240403032448.png" alt="" style="object-fit: scale-down">
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+- Real-time: Yes. The server can send data to the client at any time.
+- Bi-directional: No. The client cannot send data to the server.
+- Complexity: Medium. Requires more setup than HTTP requests. Uses XHR streaming to transport messages over HTTP
+- Browser Support: Medium. Not all browsers support this.
+</div>
+
+<aside class="notes"><table>
+<thead>
+<tr>
+<th><strong>WebSockets</strong></th>
+<th><strong>Server-Sent Events</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Two-way message transmission</td>
+<td>One-way message transmission (server to client)</td>
+</tr>
+<tr>
+<td>Supports binary and UTF-8 data transmission</td>
+<td>Supports UTF-8 data transmission only</td>
+</tr>
+<tr>
+<td>Supports a large number of connections per browser</td>
+<td>Supports a limited number of connections per browser (six)</td>
+</tr>
+<tr>
+<td>Can&#39;t be polyfilled using JavaScript; you need to fall back to basic HTTP messages</td>
+<td>Can be polyfilled using JavaScript</td>
+</tr>
+<tr>
+<td>Some enterprise firewalls with packet inspection have trouble dealing with WebSockets</td>
+<td>No blocking by enterprise firewalls</td>
+</tr>
+</tbody></table>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+Js
+```javascript
+const eventSource = new EventSource("api/events");
+
+eventSource.onmessage = function(event) {
+    console.log("New message: ", event.data);
+};
+```
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+**Polling**:
+- Real-time: No. The client must send a request to receive a response.
+- Bi-directional: No. The server cannot send data to the client without a client request.
+- Complexity: High. Requires more setup and resources than other methods.
+- Browser Support: High. All modern browsers support this.
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+Short Polling
+
+<img src="Pasted image 20240403032811.png" alt="" style="object-fit: scale-down" class="h-50">
+
+- Involves the client sending HTTP requests at regular intervals to check for updates.
+- The server processes each request and returns a response immediately, regardless of whether new data is available.
+</div>
+
+<aside class="notes"><ul>
+<li>Key Features:<ul>
+<li>Simple Implementation: Easier to implement than long polling.</li>
+<li>High Frequency Polling: Can be set to poll at very short intervals.</li>
+<li>Independent Requests: Each request is independent, reducing server memory usage.</li>
+</ul>
+</li>
+<li>Use Cases:<ul>
+<li>Periodic Data Updates: Useful for data that changes at predictable intervals.</li>
+<li>System Health Checks: Regularly checks the status of systems or services.</li>
+<li>Content Feeds: Updates feeds where real-time data is not critical.</li>
+</ul>
+</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+Long polling
+
+<img src="Pasted image 20240403033241.png" alt="" style="object-fit: scale-down" class="h-50">
+
+- A variation of the traditional polling technique where the server holds a client request open until new data is available.
+- Upon receiving new data, the server responds and closes the connection. The client then immediately sends another request, thus creating a near-continuous connection.
+</div>
+
+<aside class="notes"><p>Key Features:</p>
+<ul>
+<li>Reduced Latency: Delivers updates with minimal delay.</li>
+<li>Server-Triggered Responses: Server sends data as soon as it&#39;s available.</li>
+<li>Efficient for Real-Time Data: Ideal for applications requiring real-time updates.
+Use Cases:</li>
+<li>Chat Applications: Delivers messages in real-time.</li>
+<li>Live Sports Updates: Instantly updates scores and events.</li>
+<li>Notification Systems: Alerts users to new events or changes immediately.<h2 id="key-differences">Key Differences<a href="https://www.svix.com/resources/faq/long-polling-vs-short-polling/#key-differences" title="Direct link to Key Differences">​</a></h2>
+</li>
+</ul>
+<ol>
+<li><strong>Connection Duration</strong>: Long polling holds the connection open, while short polling involves repeated separate requests.</li>
+<li><strong>Data Latency</strong>: Long polling provides data with lower latency compared to short polling.</li>
+<li><strong>Server Load</strong>: Long polling can be more demanding on the server, especially with many open connections.</li>
+<li><strong>Implementation Complexity</strong>: Long polling is generally more complex to implement than short polling.</li>
+<li><strong>Real-Time Capability</strong>: Long polling is better suited for real-time applications.</li>
+</ol>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+Short polling
+```html
+ <script>
+	function loadInformation() {
+		setInterval(function () {
+			// Request
+			var request = new XMLHttpRequest();
+			request.open("GET", "./data.json");
+			request.send();
+			// Response
+			request.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+					// Also checked status==200 to 
+					// verify its status is OK or not
+					console.log(this.responseText);
+				}
+			}
+		}, 1000);
+	}
+__SCRIPT_END__
+```
+Long polling
+```html
+<script>
+	function loadInformation() {
+		// Request
+		var request = new XMLHttpRequest();
+		request.open("GET", "./data.json");
+		request.send();
+		// Response
+		request.onreadystatechange = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				// Also checked status==200 to 
+				// verify its status is OK or not
+				console.log(this.responseText);
+				loadInformation();
+			}
+		}
+	}
+__SCRIPT_END__
+```
+</div>
+
+<aside class="notes"><ul>
+<li>short polling: In this example, the client sends a GET request to the server every second to check for new data. If the server has new data, it sends it back and the client logs it to the console</li>
+<li>long polling: In this example, the client sends a GET request to the server. If the server has new data, it sends it back, the client logs it to the console, and then immediately sends another request</li>
+</ul>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+### Use Cases:
+</div></script></section></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 560px; width: 960px; min-height: 560px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+## Web Worker
+
+- JavaScript feature
+
+- Independent background script
+
+- Can't direct access to the DOM _but indirect through message pipeline_ <- how it propagate change
+</div></script></section></div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/math/math.js"></script>
+	<script src="plugin/mermaid/mermaid.js"></script>
+	<script src="plugin/chart/chart.min.js"></script>
+	<script src="plugin/chart/plugin.js"></script>
+	<script src="plugin/menu/menu.js"></script>
+	<script src="plugin/customcontrols/plugin.js"></script>
+	<script src="plugin/chalkboard/plugin.js"></script>
+	<script src="plugin/reveal-pointer/pointer.js"></script>
+	<script src="plugin/elapsed-time-bar/elapsed-time-bar.js"></script>
+
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+	  function isLight(color) {
+		let hex = color.replace('#', '');
+
+		// convert #fff => #ffffff
+		if(hex.length == 3){
+			hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+		}
+
+		const c_r = parseInt(hex.substr(0, 2), 16);
+		const c_g = parseInt(hex.substr(2, 2), 16);
+		const c_b = parseInt(hex.substr(4, 2), 16);
+		const brightness = ((c_r * 299) + (c_g * 587) + (c_b * 114)) / 1000;
+		return brightness > 155;
+	}
+
+	var bgColor = getComputedStyle(document.documentElement).getPropertyValue('--r-background-color').trim();
+	var isLight = isLight(bgColor);
+
+	if(isLight){
+		document.body.classList.add('has-light-background');
+	} else {
+		document.body.classList.add('has-dark-background');
+	}
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath.MathJax3,
+		  RevealMermaid,
+		  RevealChart,
+		  RevealCustomControls,
+		  RevealMenu,
+	      RevealPointer,
+		  RevealChalkboard, 
+		  ElapsedTimeBar
+        ],
+
+
+    	allottedTime: 120 * 1000,
+
+		mathjax3: {
+			mathjax: 'plugin/math/mathjax/tex-mml-chtml.js',
+		},
+		markdown: {
+		  gfm: true,
+		  mangle: true,
+		  pedantic: false,
+		  smartLists: false,
+		  smartypants: false,
+		},
+
+		mermaid: {
+			theme: isLight ? 'default' : 'dark',
+		},
+
+		customcontrols: {
+			controls: [
+				{id: 'toggle-overview',
+				title: 'Toggle overview (O)',
+				icon: '<i class="fa fa-th"></i>',
+				action: 'Reveal.toggleOverview();'
+				},
+				{ icon: '<i class="fa fa-pen-square"></i>',
+				title: 'Toggle chalkboard (B)',
+				action: 'RevealChalkboard.toggleChalkboard();'
+				},
+				{ icon: '<i class="fa fa-pen"></i>',
+				title: 'Toggle notes canvas (C)',
+				action: 'RevealChalkboard.toggleNotesCanvas();'
+				},
+			]
+		},
+		menu: {
+			loadIcons: false
+		}
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"width":960,"height":"560","margin":"0.6","controls":true,"progress":true,"slideNumber":true,"transition":"slide","transitionSpeed":"default"}, queryOptions);
+    </script>
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+
+  <!-- created with Advanced Slides -->
+</html>
