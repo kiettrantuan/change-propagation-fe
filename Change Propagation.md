@@ -10,6 +10,8 @@ transition: slide
 		height: 50%
 	}
 </style>
+![[Pasted image 20240404020939.png]]
+---
 # **Change Propagation In Frontend Environment**
 
 
@@ -285,6 +287,7 @@ Alternative: socket.io <!-- element class="fragment" data-fragment-index="1" -->
 - Bi-directional: No. The client cannot send data to the server.
 - Complexity: Medium. Requires more setup than HTTP requests. Uses XHR streaming to transport messages over HTTP
 - Browser Support: Medium. Not all browsers support this.
+
 note:
 
 | **WebSockets**                                                                        | **Server-Sent Events**                                     |
@@ -397,14 +400,165 @@ note:
 - long polling: In this example, the client sends a GET request to the server. If the server has new data, it sends it back, the client logs it to the console, and then immediately sends another request
 
 --
-### Use Cases: 
+### Use Cases:  <!-- element drop="" -->
 
+<grid  drag="50 100" drop="left" bg="#75CFB8" drop="0 20"  class="fragment" data-fragment-index="1">
+#### HTTP Requests
+Fetching data from a server when the page loads or when a user performs an action. 
+</grid> 
+
+<grid  drag="50 100" drop="right" bg="#BBDFC8" drop="50 20" class="fragment" data-fragment-index="2">
+#### WebSockets
+Real-time applications such as chat apps, live sports updates, or real-time stock market data. 
+</grid>
+note:
+HTTP: For example, when a user logs in, the frontend might make a POST request to the backend to verify the user’s credentials.
+Websocket: For example, in a chat app, when a user sends a message, it can be instantly pushed to other users without them needing to refresh the page
+--
+<grid  drag="50 100" drop="left" bg="#F0E5D8" class="fragment" data-fragment-index="1">
+#### Server-Sent Events (SSE)
+Applications where the server needs to push updates to the client, but the client doesn’t need to send data to the server. 
+</grid>
+<grid  drag="50 100" drop="right" bg="#FFC478" class="fragment" data-fragment-index="2" style="display: flex; flex-direction: column; align-items: flex-end">
+#### Polling
+Applications where real-time updates are needed, but WebSockets or SSE are not supported. 
+</grid>
+note:
+SSE: For example, a news website might use SSE to push breaking news updates to the client
+Polling: For example, a weather application might use long polling to regularly update the weather data
 ---
 ## Web Worker
+![[Pasted image 20240403171749.png|1080]] <!-- element class="fragment" data-fragment-index="1"-->
+note:
+Web Worker là một phương tiện đơn giản giúp cho trang web có thể chạy JavaScipt ở background. Luồng này có thể chạy mà không can thiệp gì đến giao diện chính. Một khi đã được khởi tạo, Worker có thể giao tiếp với luồng chính thông qua việc gửi và nhận message.
 
-- JavaScript feature
+Vì vậy, khi áp dụng JavaScript Web Worker một cách chính xác và phù hợp, trang web của bạn sẽ hoạt động mượt mà hơn rất nhiều.
+--
+### Dedicated Workers
 
-- Independent background script
+- The simplest of the Web Workers.
+<!-- element class="fragment" data-fragment-index="1"-->
+<br/>
+- Each one of these workers have exactly one parent. 
+<!-- element class="fragment" data-fragment-index="2"-->
+<br/>
+- It cannot share data directly with other scripts or workers.
+<!-- element class="fragment" data-fragment-index="3"-->
+--
+```javascript
+// Main script
+var worker = new Worker('worker.js');
 
-- Can't direct access to the DOM _but indirect through message pipeline_ <- how it propagate change
+worker.addEventListener('message', function(e) {
+  console.log('Message from worker: ', e.data);
+});
+
+worker.postMessage([2, 3]); // Send data to the worker
+
+// worker.js
+self.addEventListener('message', function(e) {
+  console.log('Worker received: ', e.data);
+  var result = e.data[0] * e.data[1];
+  self.postMessage(result); // Send data back to the main script
+});
+```
+--
+#### Why use a Dedicated Worker ?
+- Gives access  to an additional thread <!-- element class="fragment" data-fragment-index="1"-->
+- Offlad CPU intensive work <!-- element class="fragment" data-fragment-index="2"-->
+- Note : worker dies when parent dies <!-- element class="fragment" data-fragment-index="3"-->
+--
+### Shared Workers
+
+- Can have multiple parents. 
+<!-- element class="fragment" data-fragment-index="1"-->
+<br/>
+- Can share data or state between multiple scripts. 
+<!-- element class="fragment" data-fragment-index="2"-->
+<br/>
+- All scripts must come from the same origin (same protocol, host, and port) to access the same shared worker.
+<!-- element class="fragment" data-fragment-index="3"-->
+note: 
+So for example, you can't have the Google web page communicating with the Microsoft web page
+--
+```javascript
+// Main script
+var worker = new SharedWorker('worker.js');
+
+worker.port.addEventListener('message', function(e) {
+  console.log('Message from worker: ', e.data);
+});
+
+worker.port.start(); // Start the port
+worker.port.postMessage('Hello, worker!'); // Send data to the worker
+
+// worker.js
+self.addEventListener('connect', function(e) {
+  var port = e.ports[0];
+  port.addEventListener('message', function(e) {
+    console.log('Worker received: ', e.data);
+    port.postMessage('Hello, main script!'); // Send data back to the main script
+  });
+  port.start(); // Start the port
+});
+```
+note:
+Creating a shared worker is very similar to how to create a dedicated one, but instead of the straight-forward communication between the main thread and the worker thread, you'll have to communicate via a port object, i.e., an explicit port has to be opened so multiple scripts can use it to communicate with the shared worker. (Note that dedicated workers do this implicitly)
+--
+#### Why use a Shared Worker ?
+- You need to communicate across pages <!-- element class="fragment" data-fragment-index="1"-->
+- You want a cross-page singleton source of truth <!-- element class="fragment" data-fragment-index="2"-->
+- Note : worker dies when last parent dies <!-- element class="fragment" data-fragment-index="3"-->
+--
+### Service workers
+
+- The most complex of the Web Workers
+<!-- element class="fragment" data-fragment-index="1"-->
+<br/>
+- Intercept / proxy requests made to server
+<!-- element class="fragment" data-fragment-index="2"-->
+<br/>
+- Can have zero parents, run in background
+<!-- element class="fragment" data-fragment-index="3"-->
+note:
+- intercept ajax/fetch request
+--
+```javascript
+// Register a service worker
+navigator.serviceWorker.register('service-worker.js');
+
+// service-worker.js
+self.addEventListener('install', function(event) {
+  event.waitUntil(
+    caches.open('my-cache').then(function(cache) {
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/app.js',
+        '/style.css'
+      ]);
+    })
+  );
+});
+
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request).then(function(response) {
+      return response || fetch(event.request);
+    })
+  );
+});
+```
+note:
+The service worker looks for the matching request in the cache and returns the corresponding Response if it's cached. Otherwise it retrieves the response from the network (optionally, updating the cache for future calls). If there is neither a cache response nor a network response, the request will error
+--
+#### Why use a Service Worker ?
+- Cache network assets when offline <!-- element class="fragment" data-fragment-index="1"-->
+- Perform background syncs of updated content <!-- element class="fragment" data-fragment-index="2"-->
+- Push notifications <!-- element class="fragment" data-fragment-index="3"-->
+---
+# Wrap up
+---
+# 
+![[Pasted image 20240404021551.png]]
 
