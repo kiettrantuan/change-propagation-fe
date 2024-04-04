@@ -19,98 +19,122 @@ transition: slide
 
 # What
 
-  
-
- Pull/Push change to other parts in FE Ecosystem <!-- element class="fragment" data-fragment-index="1" -->
+ Pull / Push change to other parts in FE Ecosystem <!-- element class="fragment" data-fragment-index="1" -->
 note:
-1. _Hiện "What"_
+1. "What"
 Change propagation (lan truyền thay đổi) là gì:
 - Khi thay đổi 1 phần trong hệ thống sẽ dẫn đến sự thay đổi ở các phần khác có liên quan đến nó.
 - Như các bánh răng liên kết với nhau khi ta xoay 1 bánh bất kì sẽ lan truyền động năng làm xoay các bánh còn lại.
-2. _Hiện "Pull/Push.." và hình_
-- Ở FE ta có sơ đồ lan truyền gồm các thành phần chính là User, Display, Webworker và Backend.
-- Ngoài Webworker và Backend có thể tương tác trực tiếp thì các phần lan truyền thay đổi qua Display.
-NOTE (ko nói):
-- Như khi chiên trứng -> tăng lửa -> chảo nóng -> trứng chín -> tắt lửa -> chảo giảm nhiệt -> trứng không bị khét.
-
-  
 
 ---
 
-  
-
-# DATA FLOW
-![[Pasted image 20240403142749.png]]
- <!-- element class="fragment" data-fragment-index="1" -->
+![[fe-flow.png]]
 
 note:
+- Ở FE ta có **sơ đồ lan truyền** gồm các thành phần chính là User, Display, Webworker và Backend. Trong đó:
+- **Backend**, **Webworker** và **User** là tác nhân Push thay đổi và lan truyền thông qua **Display**.
+- **Display**: Render giao diện cho user tương tác và xử lý các thay đổi qua state/cache.
+
+- _(chi tiết từng phần nói ở slide sau)_
 - **Backend**: This is the server-side of the application where data processing and storage occur.
 - **Browser**: This represents the client-side of the application where user interactions take place. It contains two parts: “Display (HTML/JS FE Framework)” and “State/Cache”. The “Display” part is responsible for rendering the user interface, while the “State/Cache” part manages the application’s state and cached data.
 - **Webworker**: This is a separate thread in the browser that can perform tasks in parallel with the main browser thread. It helps to offload heavy computations from the main thread, keeping the user interface responsive.
 - **User**: This represents the end-user interacting with the application through the browser.
 
 ---
-## User interaction 
-- Click, touch
-- Typing
-- Scrolling
-- ...
+## User
+- Click, touch<!-- element class="fragment" data-fragment-index="1" -->
+- Typing<!-- element class="fragment" data-fragment-index="1" -->
+- Scrolling<!-- element class="fragment" data-fragment-index="1" -->
+- ...<!-- element class="fragment" data-fragment-index="1" -->
+
 note:
-1. Đầu tiên em xin nói về Thay đổi đến từ Tương tác của User:
-- User thông qua các thiết bị vật lý như chuột, bàn phím, màn hình... Push và Pull thay đổi từ Display.
-2. Ví dụ:
-- User nhập form login rồi submit thì Display gọi lên Backend, đợi nhận kết quả login rồi Display render kết quả lại cho User.
-- Trong ví dụ này, thay đổi đến từ User đã lan truyền qua Display tới Backend và ngược lại.
+Đầu tiên em xin nói về Thay đổi đến từ Tương tác của User:
+1. Thường User thông qua các thiết bị vật lý như chuột, bàn phím, màn hình... thực hiện các thao tác click, touch, typing, scrolling... để Push và nhận biết các thay đổi từ Display.
+2. Ví dụ User login đã lan truyền thay đổi từ việc nhập form rồi submit đến Display update, gọi Backend rồi trả về kết quả cho User thông qua màn hình.
+
 ---
 ## Display
+
+![[fe-flow_display.png]]
+
+note:
+Tiếp theo là Display:
+1. Display là phần nằm giữa sơ đồ đóng vai trò trung tâm tiếp nhận thay đổi từ các phần còn lại, tính toán rồi push thay đổi đến các phần cần thiết khác như ví dụ trên là xử lý thay đổi qua lại giữa User, Backend và chính nó.
+
+--
+
 - HTML: Structure & Content
 - CSS: Style
-- JS: Functionality 
---
-![[Pasted image 20240403141814.png]] 
+- JS: Functionality
+
 note:
-1. Display giữ vai trò nhận thay đổi từ các phần còn lại, xử lý rồi push thay đổi đến các phần cần thiết trong sơ đồ.
 2. Display tạo thành từ 3 ngôn ngữ có chức năng khác nhau:
 - HTML: Cấu trúc và nội dung -> tĩnh -> xương sống
 - CSS: Giao diện -> tĩnh -> da, quần áo, vẻ ngoài
 - JavaScript: Chức năng, tương tác -> đông -> bộ não, điều khiển mọi chức năng, hoạt động sống
-NOTE (ko nói):
-- Khi user truy cập web trên browser thì HTML sẽ load thành DOM cung cấp các method cho phép JavaScript truy cập và thay đổi.
-- Get từ server (qua HTTP req/res) hoặc cache;
-- HTML có thể qua <form action method> <button submit> để giao tiếp server mà ko cần JS, server process -> trả về HTML mới
+
+--
+![[Pasted image 20240403141814.png]] 
+note:
+- HTML: Cấu trúc và nội dung -> tĩnh -> xương sống
+- CSS: Giao diện -> tĩnh -> da, quần áo, vẻ ngoài
+- JavaScript: Chức năng, tương tác -> đông -> bộ não điều khiển mọi chức năng, hoạt động sống
 
 --
 ### Propagate change:
-- User: DOM Event -> JS -> ... -> DOM
-- Webworker: DOM message Event -> JS -> ... -> DOM
-- Backend: Network method -> JS -> ... -> DOM
+- User: Element attributes/DOM Event -> \[JS ->] ...
+- Webworker: DOM Message Event -> JS -> ...
+- Backend: Network method -> \[JS ->] ...
+
 note:
-3. Vậy làm sao để Display nhận biết (pull) thay đổi:
-- Phía User: Gán event, state vào các element mà user có thể tương tác như button, input,...
-- Phía Webworker: Event onmessage và postmessage
-- Phía Backend: api, websocket...
-4. Các DOM Event hay response từ BE sẽ được JS xử lý, tính toán lan và lan truyền đi cuối cùng quay lại update DOM cho User nếu cần thiết.
-5. Ví dụ: User login thì JS lấy username và pass từ DOM gửi lên BE, đợi response login thành công thì JS update State của user thành đã login và thay đổi các Element tương ứng như đổi button login thành sign out, hiển thị username...
+3. Vậy làm sao để Display nhận và lan truyền thay đổi:
+- Phía User: Dựa trên attribute hoặc DOM Event của các element mà user có thể tương tác như button, input,...
+- Phía Webworker: DOM Event onmessage và postmessage
+- Phía Backend: Network method như api, websocket...
+4. Các Event này có thể được JS xử lý, tính toán hoặc truyền thẳng đến các phần khác.
+**KO NÓI**:
+- HTML có thể thông qua **form attribute event như action method submit** để giao tiếp server mà ko cần JS
+- DOM là cấu trúc cây với cấu tạo HTML
+- Khi user truy cập web trên browser thì HTML sẽ load thành DOM cung cấp các method cho phép JavaScript truy cập và thay đổi.
+- Get từ server (qua HTTP req/res) hoặc cache;
+- Như PHP trả plain HTML cho browser
+
 --
-### Framework:
-- React: Virtual DOM
-- Vue: data-binding
-- HTMX
+
+![[user-login.png]]
+
 note:
-React:
-React uses a virtual DOM to track changes. When state changes in a component, React creates a new virtual DOM and compares it with the old one1.
-This process is called “diffing”. React identifies the differences (or “diffs”) between the old and new virtual DOMs and updates only those parts in the real DOM1.
-React uses synthetic events, which are wrappers around the browser’s native events. You can stop event propagation on synthetic events because React handles propagation of these events internally2.
-However, stopping the propagation of one type of event (e.g., a change event) won’t affect the propagation of a different type of event (e.g., a click event)3.
-React’s one-way data flow means that state is passed down from parent components to child components through props1. This makes state changes predictable but can make complex state management more challenging1.
-Vue:
-Vue also uses a virtual DOM and a diffing algorithm, similar to React4.
+5. Quay lại ví dụ User login thì User input form rồi submit sẽ:
+- Trigger Event form submit truyền id/pass đến JS xử lý như validate rồi gửi hoặc trực tiếp gửi lên BE.
+- Sau đó BE Response có thể là file HTML mới hoặc truyền dữ liệu cho JS update State các Element cần thiết hiển thị User biết đã login (re-render) (như đổi button login thành sign out, hiển thị username...)
+
+--
+### Concepts:
+- Client State management: React -> highly interactive
+- Server State management: HTMX
+
+note:
+- React manage state trong component là 1 tập hợp các HTML Element sẽ rerender/update khi state thay đổi.
+-> Tính toán chủ yếu ở Client -> Nặng do phải lưu tất cả state khả thi của component <- cache lo
+-> Tính ương tác phản hồi nhanh do có thể update mà ko cần liên hệ với server (optimistic update như nhấn like)
+-> Phức tạp do manage state, sync state, transform dữ liệu gửi/nhận với BE.
+-> Flexible
+- HTMX thêm event cho phép bất kì HTML Element nào cũng có thể send request lên Server và response HTML update Element cần thiết trong DOM.
+-> Tính toán chủ yếu ở Server -> Nhẹ
+-> Độ tin cậy, tính chính xác cao do sync với server
+-> Đơn giản do BE đã làm hết (ko cần api do http req/res plain html)
+-> Simple
+
+**KO NÓI**:
+**React** dùng Virtual DOM để theo dõi thay đổi. Khi state đổi thì tạo ra Virtual DOM mới so sánh với Virtual DOM cũ rồi render/update chỉ những phần khác biệt ra DOM. _(React tạo wrappers bao tất cả events - Capture Target Bubbling)_
+
+**Vue** cũng dùng Virtual DOM để so sánh.
 However, Vue extends this with a reactivity system. When you change a Vue instance’s data, the view automatically updates4.
 Vue uses an event system that allows components to communicate with each other. Events in Vue can be triggered by user actions, component methods, or other components4.
 Vue provides the .stop modifier for v-on to stop event propagation5.
 Vue supports two-way data binding (with the v-model directive), which can make handling user input more straightforward4.
-For complex state management, Vue relies on Vuex, a state management library6.
-HTMX:
+
 HTMX allows you to access modern browser features directly from HTML, rather than using JavaScript7.
 It extends and generalizes the core idea of HTML as a hypertext, opening up many more possibilities directly within the language7.
 Any element, not just anchors and forms, can issue an HTTP request7.
@@ -118,7 +142,9 @@ Any event, not just clicks or form submissions, can trigger requests7.
 Any HTTP verb, not just GET and POST, can be used7.
 Any element, not just the entire window, can be the target for update by the request7.
 When a successful action occurs during a POST, the response includes an HX-Trigger response header that looks like this: HX-Trigger:newContact. This will trigger the table to issue a GET to /contacts/table and this will render the newly added contact row (in addition to the rest of the table)
+
 ---
+
 ## Backend
 - HTTP Requests <!-- element class="fragment" data-fragment-index="1" -->
 - WebSockets <!-- element class="fragment" data-fragment-index="2" -->
